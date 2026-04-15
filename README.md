@@ -1,6 +1,6 @@
 # RoadBuddy
 
-**RoadBuddy** is a modern ride-sharing platform that connects drivers and passengers for efficient, affordable, and sustainable travel. Inspired by platforms like BlaBlaCar, RoadBuddy allows users to share rides for both short urban trips and long-distance journeys.
+**RoadBuddy** is a modern ride-sharing platform that connects drivers and passengers for efficient, affordable, and sustainable travel. Inspired by platforms like BlaBlaCar.
 
 ## What is RoadBuddy?
 
