@@ -1,37 +1,58 @@
 package server
 
 import (
+	"backend/config"
+	"backend/internal/adapters/bcrypt"
+	api "backend/internal/adapters/http"
+	"backend/internal/adapters/jwt"
+	"backend/internal/adapters/postgres"
+	"backend/internal/domain/auth"
 	"fmt"
+	"log"
+	"log/slog"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-
-	database "backend/internal/adapters/database"
 )
 
 type Server struct {
-	port int
-	db database.Service
+	port     string
+	db       postgres.DBService
+	handlers *api.Handlers
 }
 
 func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
+	cfg := config.LoadConfig()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-		db: database.New(),
+	db := postgres.New(cfg.DBConnString, cfg.DBName)
+	authRepository := postgres.NewAuthRepository(db.Pool())
+	tokenProvider, err := jwt.NewTokenProvider(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
+	if err != nil {
+		log.Fatalf("Failed to initialize token provider: %v", err)
+	}
+	hasher := bcrypt.NewPasswordHasher()
+
+	// Services
+	authService := auth.NewService(authRepository, tokenProvider, hasher)
+
+	// Handlers
+	handlers := &api.Handlers{
+		Auth: api.NewAuthHandler(authService, logger),
 	}
 
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	app := &Server{
+		port:     cfg.Port,
+		db:       db,
+		handlers: handlers,
 	}
 
-	return server
+	return &http.Server{
+		Addr:         fmt.Sprintf(":%s", app.port),
+		Handler:      app.RegisterRoutes(),
+		IdleTimeout:  cfg.IdleTimeout,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+	}
 }
