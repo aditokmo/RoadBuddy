@@ -1,53 +1,35 @@
-# Project backend
+# RoadBuddy Backend
 
-One Paragraph of project description goes here
+Go backend API for the RoadBuddy ride-sharing platform.
 
-## Getting Started
+## Prerequisites
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+- Go 1.25+
+- Docker & Docker Compose
+- Air (automatic install on first `make dev`)
 
-## MakeFile
+## Quick Start
 
-Run build make command with tests
+### 1. Clone & Setup
+
 ```bash
-make all
+git clone https://github.com/aditokmo/RoadBuddy.git
+cd backend
+cp .env.example .env
 ```
 
-Build the application
-```bash
-make build
-```
+### 2. Configure Environment
 
-Run the application
-```bash
-make run
-```
-Create DB container
+Edit `.env` and set (or use defaults for local dev):
+
+### 3. Start Development
+
 ```bash
 make docker-run
 ```
 
-Shutdown DB Container
+## Stopping Services
+
 ```bash
 make docker-down
-```
-
-DB Integrations Test:
-```bash
-make itest
-```
-
-Live reload the application:
-```bash
-make watch
-```
-
-Run the test suite:
-```bash
-make test
-```
-
-Clean up binary from the last build:
-```bash
-make clean
 ```
