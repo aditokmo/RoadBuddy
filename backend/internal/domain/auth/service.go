@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"backend/internal/domain/user"
 	"context"
 	"fmt"
 	"time"
@@ -22,22 +23,22 @@ func NewService(repository Repository, tokens TokenProvider, hasher PasswordHash
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, user UserCredentials) (*Token, error) {
-	if err := user.Validate(); err != nil {
+func (s *AuthService) Register(ctx context.Context, u UserCredentials) (*Token, error) {
+	if err := u.Validate(); err != nil {
 		return nil, err
 	}
 
-	hashedPassword, err := s.hasher.Hash(user.Password)
+	hashedPassword, err := s.hasher.Hash(u.Password)
 	if err != nil {
 		return nil, fmt.Errorf("Hashing password: %w", err)
 	}
 
-	newUser := &User{
+	newUser := &user.User{
 		ID:             uuid.NewString(),
-		Name:           user.Name,
-		Email:          user.Email,
+		Name:           u.Name,
+		Email:          u.Email,
 		HashedPassword: hashedPassword,
-		Role:           RolePassenger,
+		Role:           user.RolePassenger,
 		IsVerified:     false,
 		IsDisabled:     false,
 		CreatedAt:      time.Now().UTC(),

@@ -5,6 +5,10 @@ build:
 run:
 	@go run cmd/api/main.go
 
+stop:
+	-@taskkill /f /im main.exe 2>nul || exit 0
+	-@powershell -Command "if (Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue) { Stop-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess -Force }"
+
 # Start DB in Docker, then run backend with Air (dev workflow)
 dev:
 	@echo "Starting database..."

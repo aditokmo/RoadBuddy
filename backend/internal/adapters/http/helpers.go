@@ -2,6 +2,7 @@ package http
 
 import (
 	"backend/internal/domain/auth"
+	"backend/internal/domain/user"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -62,11 +63,22 @@ func (h *AuthHandler) handleAuthError(w http.ResponseWriter, err error) {
 	case errors.Is(err, auth.ErrExpiredToken):
 		writeError(w, http.StatusUnauthorized, "Token has expired", "expired_token")
 
-	case errors.Is(err, auth.ErrUserNotFound):
+	case errors.Is(err, user.ErrUserNotFound):
 		writeError(w, http.StatusNotFound, "User not found", "user_not_found")
 
 	default:
 		h.logger.Error("Unhandled auth error", "error", err)
 		writeError(w, http.StatusInternalServerError, "An unexpected error occurred", "internal_error")
+	}
+}
+
+func (h *UserHandler) handleUserError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, user.ErrUserNotFound):
+		writeError(w, http.StatusNotFound, "user not found", "user_not_found")
+
+	default:
+		h.logger.Error("unhandled user error", slog.String("error", err.Error()))
+		writeError(w, http.StatusInternalServerError, "an unexpected error occurred", "internal_error")
 	}
 }

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"backend/internal/domain/auth"
+	"backend/internal/domain/user"
 	"context"
 	"errors"
 	"fmt"
@@ -19,7 +20,7 @@ func NewAuthRepository(db *pgxpool.Pool) *AuthRepository {
 	return &AuthRepository{db: db}
 }
 
-func (ar *AuthRepository) Create(ctx context.Context, user *auth.User) error {
+func (ar *AuthRepository) Create(ctx context.Context, user *user.User) error {
 	query := "INSERT INTO users (id, name, email, password_hash, role, is_verified, is_disabled, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 	_, err := ar.db.Exec(ctx, query, user.ID, user.Name, user.Email, user.HashedPassword, user.Role, user.IsVerified, user.IsDisabled, user.CreatedAt)
 	if err != nil {
@@ -33,28 +34,28 @@ func (ar *AuthRepository) Create(ctx context.Context, user *auth.User) error {
 	return nil
 }
 
-func (ar *AuthRepository) GetByEmail(ctx context.Context, email string) (*auth.User, error) {
+func (ar *AuthRepository) GetByEmail(ctx context.Context, email string) (*user.User, error) {
 	query := "SELECT id, name, email, password_hash, role, is_verified, is_disabled, created_at FROM users WHERE email = $1"
 
-	user := &auth.User{}
+	u := &user.User{}
 
 	err := ar.db.QueryRow(ctx, query, email).Scan(
-		&user.ID,
-		&user.Name,
-		&user.Email,
-		&user.HashedPassword,
-		&user.Role,
-		&user.IsVerified,
-		&user.IsDisabled,
-		&user.CreatedAt,
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.HashedPassword,
+		&u.Role,
+		&u.IsVerified,
+		&u.IsDisabled,
+		&u.CreatedAt,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, auth.ErrUserNotFound
+			return nil, user.ErrUserNotFound
 		}
 		return nil, err
 	}
 
-	return user, nil
+	return u, nil
 }

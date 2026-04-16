@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"backend/internal/domain/user"
 	"errors"
 	"net/mail"
 	"strings"
@@ -10,31 +11,12 @@ import (
 
 var (
 	ErrInvalidCredentials = errors.New("Invalid credentials")
-	ErrUserNotFound       = errors.New("User not found")
 	ErrInvalidToken       = errors.New("Invalid token")
 	ErrInvalidEmail       = errors.New("Invalid email")
 	ErrExpiredToken       = errors.New("Expired token")
 	ErrEmailTaken         = errors.New("Email is taken")
 	ErrAccountDisabled    = errors.New("Account has been disabled")
 	ErrWeakPassword       = errors.New("Weak password")
-)
-
-type Role string
-
-type User struct {
-	ID             string
-	Name           string
-	Email          string
-	HashedPassword string
-	Role           Role
-	IsVerified     bool
-	IsDisabled     bool
-	CreatedAt      time.Time
-}
-
-const (
-	RolePassenger Role = "passenger"
-	RoleDriver    Role = "driver"
 )
 
 type UserCredentials struct {
@@ -58,7 +40,7 @@ type TokenPair struct {
 type Claims struct {
 	UserID string
 	Email  string
-	Role   Role
+	Role   user.Role
 }
 
 func (user *UserCredentials) Validate() error {

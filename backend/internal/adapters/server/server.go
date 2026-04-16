@@ -7,6 +7,7 @@ import (
 	"backend/internal/adapters/jwt"
 	"backend/internal/adapters/postgres"
 	"backend/internal/domain/auth"
+	"backend/internal/domain/user"
 	"fmt"
 	"log"
 	"log/slog"
@@ -27,7 +28,11 @@ func NewServer() *http.Server {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	db := postgres.New(cfg.DBConnString, cfg.DBName)
+
+	// Repositories
 	authRepository := postgres.NewAuthRepository(db.Pool())
+	userRepository := postgres.NewUserRepository(db.Pool())
+
 	tokenProvider, err := jwt.NewTokenProvider(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 	if err != nil {
 		log.Fatalf("Failed to initialize token provider: %v", err)
@@ -36,10 +41,12 @@ func NewServer() *http.Server {
 
 	// Services
 	authService := auth.NewService(authRepository, tokenProvider, hasher)
+	userService := user.NewService(userRepository)
 
 	// Handlers
 	handlers := &api.Handlers{
 		Auth: api.NewAuthHandler(authService, logger),
+		User: api.NewUserHandler(userService, logger),
 	}
 
 	app := &Server{

@@ -1,18 +1,21 @@
 package auth
 
-import "context"
+import (
+	"backend/internal/domain/user"
+	"context"
+)
 
 type Services interface {
 	Register(ctx context.Context, user UserCredentials) (*Token, error)
 }
 
 type Repository interface {
-	Create(ctx context.Context, user *User) error
-	GetByEmail(ctx context.Context, email string) (*User, error)
+	Create(ctx context.Context, user *user.User) error
+	GetByEmail(ctx context.Context, email string) (*user.User, error)
 }
 
 type TokenProvider interface {
-	GenerateTokens(user *User) (*TokenPair, error)
+	GenerateTokens(user *user.User) (*TokenPair, error)
 	ValidateAccessToken(token string) (*Claims, error)
 }
 

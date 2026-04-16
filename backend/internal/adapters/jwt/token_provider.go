@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"backend/internal/domain/auth"
+	"backend/internal/domain/user"
 	"errors"
 	"time"
 
@@ -26,7 +27,7 @@ func NewTokenProvider(secret string, accessTTL, refreshTTL time.Duration) (*Toke
 	}, nil
 }
 
-func (p *TokenProvider) GenerateTokens(user *auth.User) (*auth.TokenPair, error) {
+func (p *TokenProvider) GenerateTokens(user *user.User) (*auth.TokenPair, error) {
 	now := time.Now().UTC()
 	accessExpiry := now.Add(p.accessTokenTTL)
 	refreshExpiry := now.Add(p.refreshTokenTTL)
@@ -80,11 +81,11 @@ func (p *TokenProvider) ValidateAccessToken(token string) (*auth.Claims, error) 
 	return &auth.Claims{
 		UserID: userID,
 		Email:  email,
-		Role:   auth.Role(roleValue),
+		Role:   user.Role(roleValue),
 	}, nil
 }
 
-func (p *TokenProvider) signToken(user *auth.User, expiresAt time.Time, tokenType string) (string, error) {
+func (p *TokenProvider) signToken(user *user.User, expiresAt time.Time, tokenType string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.ID,
 		"email": user.Email,
