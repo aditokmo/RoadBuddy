@@ -20,3 +20,11 @@ func (s *UserService) GetUsers(ctx context.Context) ([]User, error) {
 	}
 	return users, nil
 }
+
+func (s *UserService) GetUserById(ctx context.Context, id string) (User, error) {
+	user, err := s.repository.GetById(ctx, id)
+	if err != nil {
+		return User{}, fmt.Errorf("Fetching user by id: %w", err)
+	}
+	return user, nil
+}

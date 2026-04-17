@@ -17,6 +17,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// User routes
 	r.HandlerFunc(http.MethodGet, "/api/v1/users", s.handlers.User.GetUsers)
+	r.HandlerFunc(http.MethodGet, "/api/v1/users/:id", s.handlers.User.GetUser)
 
 	return corsWrapper
 }

@@ -17,7 +17,7 @@ type userResponse struct {
 	CreatedAt   string    `json:"created_at"`
 }
 
-func toUserResponse(u *user.User) userResponse {
+func toUserResponse(u user.User) userResponse {
 	return userResponse{
 		ID:         u.ID,
 		Name:       u.Name,
