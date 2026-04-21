@@ -13,6 +13,7 @@ type Config struct {
 	DBConnString    string
 	DBName          string
 	JWTSecret       string
+	MigrationsPath  string
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 	ReadTimeout     time.Duration
@@ -25,6 +26,7 @@ func LoadConfig() *Config {
 	dbPass := getEnv("DB_PASSWORD")
 	dbName := getEnv("DB_NAME")
 	jwtSecret := getEnv("JWT_SECRET")
+	migrationsPath := getEnvWithFallback("MIGRATIONS_PATH", "migrations")
 	port := getEnvWithFallback("PORT", "8080")
 	dbHost := getEnvWithFallback("DB_HOST", "localhost")
 	dbPort := getEnvWithFallback("DB_PORT", "5433")
@@ -50,6 +52,7 @@ func LoadConfig() *Config {
 		DBConnString:    dbUrl,
 		DBName:          dbName,
 		JWTSecret:       jwtSecret,
+		MigrationsPath:  migrationsPath,
 		AccessTokenTTL:  accessTokenDuration,
 		RefreshTokenTTL: refreshTokenDuration,
 		ReadTimeout:     10 * time.Second,

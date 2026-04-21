@@ -15,21 +15,37 @@ Go backend API for the RoadBuddy ride-sharing platform.
 ```bash
 git clone https://github.com/aditokmo/RoadBuddy.git
 cd backend
-cp .env.example .env
+make setup
 ```
 
-### 2. Configure Environment
+The `make setup` command will:
+- Copy `.env.example` to `.env` (if it doesn't exist)
+- Download Go dependencies
+- Start the PostgreSQL database in Docker
+- Run database migrations
+- Print completion message
 
-Edit `.env` and set (or use defaults for local dev):
-
-### 3. Start Development
+### 2. Start Development
 
 ```bash
-make docker-run
+make dev
 ```
+
+This starts the backend with live reload using Air. The database will be running in the background.
 
 ## Stopping Services
 
 ```bash
 make docker-down
 ```
+
+## Available Commands
+
+- `make setup` - First-time setup (dependencies, database, migrations)
+- `make dev` - Start development server with hot reload
+- `make docker-run` - Run all services in Docker
+- `make docker-down` - Stop all Docker services
+- `make docker-migrate-up` - Run pending migrations
+- `make docker-migrate-down` - Rollback last migration
+- `make db-reset` - Reset database
+- `make clean` - Clean build

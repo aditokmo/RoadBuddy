@@ -8,6 +8,7 @@ import (
 	"backend/internal/adapters/postgres"
 	"backend/internal/domain/auth"
 	"backend/internal/domain/user"
+	"backend/pkg/database"
 	"fmt"
 	"log"
 	"log/slog"
@@ -26,6 +27,11 @@ type Server struct {
 func NewServer() *http.Server {
 	cfg := config.LoadConfig()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	if err := database.RunMigrations(cfg.DBConnString, cfg.MigrationsPath, logger); err != nil {
+		logger.Error("Migrations failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	db := postgres.New(cfg.DBConnString, cfg.DBName)
 

@@ -46,6 +46,18 @@ services:
     networks:
       - blueprint
 
+  migrate:
+    image: migrate/migrate
+    profiles: ["tools"]
+    volumes:
+      - ./migrations:/migrations
+    networks:
+      - blueprint
+    command: -path=/migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable" up
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   psql_volume_bp:
 networks:
