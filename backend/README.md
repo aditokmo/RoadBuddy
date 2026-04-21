@@ -24,11 +24,10 @@ make setup
 ```
 
 The `make setup` command will:
-- Copy `.env.example` to `.env` (if it doesn't exist)
+- Copy `.env.example` to `.env`
 - Download Go dependencies
 - Start the PostgreSQL database in Docker
 - Run database migrations
-- Print completion message
 
 ### 2. Start Development
 
