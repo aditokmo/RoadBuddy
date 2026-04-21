@@ -15,6 +15,11 @@ Go backend API for the RoadBuddy ride-sharing platform.
 ```bash
 git clone https://github.com/aditokmo/RoadBuddy.git
 cd backend
+```
+
+If you don’t have `make`, first install it, then use this command.
+
+```bash
 make setup
 ```
 
