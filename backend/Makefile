@@ -2,7 +2,8 @@
 
 setup:
 	@echo "Setting up RoadBuddy backend..."
-	@if not exist .env (echo Creating .env from .env.example... & copy .env.example .env) else (echo .env already exists)
+	@echo "Creating .env from .env.example..."
+	@cp .env.example .env
 	@echo "Downloading dependencies..."
 	@go mod download
 	@echo "Starting database..."
@@ -76,7 +77,7 @@ db-reset: docker-migrate-down docker-migrate-up
 reset:
 	@echo "Performing complete reset..."
 	@docker compose down -v
-	@if exist .env (del .env)
+	@rm -f .env
 
 clean:
 	@echo "Cleaning..."
