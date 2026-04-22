@@ -14,6 +14,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Auth routes
 	r.HandlerFunc(http.MethodPost, "/api/v1/auth/register", s.handlers.Auth.CreateAccount)
+	r.HandlerFunc(http.MethodPost, "/api/v1/auth/login", s.handlers.Auth.Login)
 
 	// User routes
 	r.HandlerFunc(http.MethodGet, "/api/v1/users", s.handlers.User.GetUsers)

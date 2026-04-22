@@ -43,24 +43,36 @@ type Claims struct {
 	Role   user.Role
 }
 
-func (user *UserCredentials) Validate() error {
+func (user *UserCredentials) ValidateRegister() error {
+	if err := user.ValidateCommon(); err != nil {
+		return err
+	}
+
+	if !isStrongPassword(user.Password) {
+		return ErrWeakPassword
+	}
+
+	return nil
+}
+
+func (user *UserCredentials) ValidateLogin() error {
+	return user.ValidateCommon()
+}
+
+func (user *UserCredentials) ValidateCommon() error {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 
-	if strings.TrimSpace(user.Name) == "" {
-		return errors.New("name is required")
-	}
-
-	if strings.TrimSpace(user.Email) == "" {
-		return errors.New("email is required")
+	if user.Email == "" {
+		return errors.New("Email is required")
 	}
 
 	if _, err := mail.ParseAddress(user.Email); err != nil {
 		return ErrInvalidEmail
 	}
 
-	if !isStrongPassword(user.Password) {
-		return ErrWeakPassword
+	if user.Password == "" {
+		return errors.New("Password is required")
 	}
 
 	return nil

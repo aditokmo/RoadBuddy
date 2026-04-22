@@ -24,7 +24,7 @@ func NewService(repository Repository, tokens TokenProvider, hasher PasswordHash
 }
 
 func (s *Service) Register(ctx context.Context, u UserCredentials) (*Token, error) {
-	if err := u.Validate(); err != nil {
+	if err := u.ValidateRegister(); err != nil {
 		return nil, err
 	}
 
@@ -49,6 +49,31 @@ func (s *Service) Register(ctx context.Context, u UserCredentials) (*Token, erro
 	}
 
 	tokens, err := s.tokens.GenerateTokens(newUser)
+	if err != nil {
+		return nil, fmt.Errorf("Generating tokens: %w", err)
+	}
+
+	return &Token{
+		Access:  tokens.AccessToken,
+		Refresh: tokens.RefreshToken,
+	}, nil
+}
+
+func (s *Service) Login(ctx context.Context, u UserCredentials) (*Token, error) {
+	existingUser, err := s.repository.GetByEmail(ctx, u.Email)
+	if err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	if !s.hasher.Compare(existingUser.HashedPassword, u.Password) {
+		return nil, ErrInvalidCredentials
+	}
+
+	if existingUser.IsDisabled {
+		return nil, ErrAccountDisabled
+	}
+
+	tokens, err := s.tokens.GenerateTokens(existingUser)
 	if err != nil {
 		return nil, fmt.Errorf("Generating tokens: %w", err)
 	}
