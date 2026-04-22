@@ -9,21 +9,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type AuthService struct {
+type Service struct {
 	repository Repository
 	tokens     TokenProvider
 	hasher     PasswordHasher
 }
 
-func NewService(repository Repository, tokens TokenProvider, hasher PasswordHasher) Services {
-	return &AuthService{
+func NewService(repository Repository, tokens TokenProvider, hasher PasswordHasher) *Service {
+	return &Service{
 		repository: repository,
 		tokens:     tokens,
 		hasher:     hasher,
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, u UserCredentials) (*Token, error) {
+func (s *Service) Register(ctx context.Context, u UserCredentials) (*Token, error) {
 	if err := u.Validate(); err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ type Handlers struct {
 	User *UserHandler
 }
 
-func NewHandlers(authService auth.Services, UserService user.Service, logger *slog.Logger) *Handlers {
+func NewHandlers(authService *auth.Service, UserService *user.Service, logger *slog.Logger) *Handlers {
 	return &Handlers{
 		Auth: NewAuthHandler(authService, logger),
 		User: NewUserHandler(UserService, logger),

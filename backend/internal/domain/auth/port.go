@@ -5,10 +5,6 @@ import (
 	"context"
 )
 
-type Services interface {
-	Register(ctx context.Context, user UserCredentials) (*Token, error)
-}
-
 type Repository interface {
 	Create(ctx context.Context, user *user.User) error
 	GetByEmail(ctx context.Context, email string) (*user.User, error)
