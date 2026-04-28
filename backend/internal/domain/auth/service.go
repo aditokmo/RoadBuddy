@@ -17,9 +17,10 @@ type Service struct {
 	tokenHasher    TokenHasher
 }
 
-func NewService(authRepo Repository, tokens TokenProvider, passwordHasher PasswordHasher, tokenHasher TokenHasher) *Service {
+func NewService(authRepo Repository, userRepo user.Repository, tokens TokenProvider, passwordHasher PasswordHasher, tokenHasher TokenHasher) *Service {
 	return &Service{
 		authRepo:       authRepo,
+		userRepo:       userRepo,
 		tokens:         tokens,
 		passwordHasher: passwordHasher,
 		tokenHasher:    tokenHasher,
@@ -123,7 +124,6 @@ func (s *Service) RefreshAccessToken(ctx context.Context, rawRefreshToken string
 		return nil, fmt.Errorf("Fetching user for session: %w", err)
 	}
 
-	// If account is disabled delete all users sessions for all devices
 	if user.IsDisabled {
 		err := s.authRepo.DeleteAllUserSessions(ctx, user.ID)
 		if err != nil {

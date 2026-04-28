@@ -49,7 +49,7 @@ func NewServer() *http.Server {
 	tokenHasher := sha256.NewTokenHasher()
 
 	// Services
-	authService := auth.NewService(authRepository, tokenProvider, passwordHasher, tokenHasher)
+	authService := auth.NewService(authRepository, userRepository, tokenProvider, passwordHasher, tokenHasher)
 	userService := user.NewService(userRepository)
 
 	services := &api.Services{
