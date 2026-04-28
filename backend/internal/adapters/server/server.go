@@ -6,6 +6,7 @@ import (
 	api "backend/internal/adapters/http"
 	"backend/internal/adapters/jwt"
 	"backend/internal/adapters/postgres"
+	"backend/internal/adapters/sha256"
 	"backend/internal/domain/auth"
 	"backend/internal/domain/user"
 	"backend/pkg/database"
@@ -21,6 +22,7 @@ import (
 type Server struct {
 	port     string
 	db       postgres.DBService
+	services *api.Services
 	handlers *api.Handlers
 }
 
@@ -43,11 +45,17 @@ func NewServer() *http.Server {
 	if err != nil {
 		log.Fatalf("Failed to initialize token provider: %v", err)
 	}
-	hasher := bcrypt.NewPasswordHasher()
+	passwordHasher := bcrypt.NewPasswordHasher()
+	tokenHasher := sha256.NewTokenHasher()
 
 	// Services
-	authService := auth.NewService(authRepository, tokenProvider, hasher)
+	authService := auth.NewService(authRepository, tokenProvider, passwordHasher, tokenHasher)
 	userService := user.NewService(userRepository)
+
+	services := &api.Services{
+		Auth: authService,
+		User: userService,
+	}
 
 	// Handlers
 	handlers := &api.Handlers{
@@ -58,6 +66,7 @@ func NewServer() *http.Server {
 	app := &Server{
 		port:     cfg.Port,
 		db:       db,
+		services: services,
 		handlers: handlers,
 	}
 

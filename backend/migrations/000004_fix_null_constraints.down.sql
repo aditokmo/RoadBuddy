@@ -1,0 +1,5 @@
+ALTER TABLE users ALTER COLUMN phone_number DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN phone_number DROP DEFAULT;
+
+ALTER TABLE users ALTER COLUMN profile_image_url DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN profile_image_url DROP DEFAULT;

@@ -10,19 +10,44 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("Invalid credentials")
-	ErrInvalidToken       = errors.New("Invalid token")
-	ErrInvalidEmail       = errors.New("Invalid email")
-	ErrExpiredToken       = errors.New("Expired token")
-	ErrEmailTaken         = errors.New("Email is taken")
-	ErrAccountDisabled    = errors.New("Account has been disabled")
-	ErrWeakPassword       = errors.New("Weak password")
+	ErrInvalidCredentials  = errors.New("Invalid credentials")
+	ErrSessionNotFound     = errors.New("Session not found")
+	ErrInvalidToken        = errors.New("Invalid token")
+	ErrInvalidEmail        = errors.New("Invalid email")
+	ErrExpiredToken        = errors.New("Expired token")
+	ErrExpiredSession      = errors.New("Session has expired")
+	ErrInvalidSession      = errors.New("Invalid session")
+	ErrEmailTaken          = errors.New("Email is taken")
+	ErrAccountDisabled     = errors.New("Account has been disabled")
+	ErrWeakPassword        = errors.New("Weak password")
+	ErrInvalidRefreshToken = errors.New("Invalid refresh token")
 )
 
-type UserCredentials struct {
-	Name     string `json:"name"`
+type Session struct {
+	ID               string
+	UserID           string
+	RefreshTokenHash string
+	UserAgent        string
+	IPAddress        string
+	ExpiresAt        time.Time
+	CreatedAt        time.Time
+}
+
+type RegisterInput struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+}
+
+type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type LoginHeaders struct {
+	UserAgent string
+	IPAddress string
 }
 
 type Token struct {
@@ -43,7 +68,11 @@ type Claims struct {
 	Role   user.Role
 }
 
-func (user *UserCredentials) ValidateRegister() error {
+func (s *Session) IsExpired() bool {
+	return time.Now().After(s.ExpiresAt)
+}
+
+func (user *RegisterInput) ValidateRegister() error {
 	if err := user.ValidateCommon(); err != nil {
 		return err
 	}
@@ -55,12 +84,18 @@ func (user *UserCredentials) ValidateRegister() error {
 	return nil
 }
 
-func (user *UserCredentials) ValidateLogin() error {
+func (user *LoginInput) ValidateLogin() error {
 	return user.ValidateCommon()
 }
 
-func (user *UserCredentials) ValidateCommon() error {
-	user.Name = strings.TrimSpace(user.Name)
+func (user *LoginInput) ValidateCommon() error {
+	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+	return nil
+}
+
+func (user *RegisterInput) ValidateCommon() error {
+	user.FirstName = strings.TrimSpace(user.FirstName)
+	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 
 	if user.Email == "" {

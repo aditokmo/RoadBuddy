@@ -19,7 +19,13 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 }
 
 func (ur *UserRepository) GetAll(ctx context.Context) ([]user.User, error) {
-	query := "SELECT id, name, email, role, is_verified, is_disabled, created_at FROM users ORDER BY created_at DESC"
+	query := `
+        SELECT 
+            id, first_name, last_name, email, phone_number, profile_image_url, 
+            rating_average, rating_count, role, is_email_verified, is_id_verified, 
+            is_disabled, version, updated_at, created_at 
+        FROM users 
+        ORDER BY created_at DESC`
 
 	rows, err := ur.db.Query(ctx, query)
 	if err != nil {
@@ -34,11 +40,19 @@ func (ur *UserRepository) GetAll(ctx context.Context) ([]user.User, error) {
 		var u user.User
 		err := rows.Scan(
 			&u.ID,
-			&u.Name,
+			&u.FirstName,
+			&u.LastName,
 			&u.Email,
+			&u.PhoneNumber,
+			&u.ProfileImageURL,
+			&u.RatingAverage,
+			&u.RatingCount,
 			&u.Role,
-			&u.IsVerified,
+			&u.IsEmailVerified,
+			&u.IsIDVerified,
 			&u.IsDisabled,
+			&u.Version,
+			&u.UpdatedAt,
 			&u.CreatedAt,
 		)
 		if err != nil {
@@ -57,15 +71,30 @@ func (ur *UserRepository) GetAll(ctx context.Context) ([]user.User, error) {
 
 func (ur *UserRepository) GetById(ctx context.Context, id string) (user.User, error) {
 	var u user.User
-	query := "SELECT id, name, email, role, is_verified, is_disabled, created_at FROM users WHERE id = $1"
+	query := `
+        SELECT 
+            id, first_name, last_name, email, phone_number, profile_image_url, 
+            rating_average, rating_count, role, is_email_verified, is_id_verified, is_phone_verified, 
+            is_disabled, version, updated_at, created_at 
+        FROM users 
+        WHERE id = $1`
 
 	err := ur.db.QueryRow(ctx, query, id).Scan(
 		&u.ID,
-		&u.Name,
+		&u.FirstName,
+		&u.LastName,
 		&u.Email,
+		&u.PhoneNumber,
+		&u.ProfileImageURL,
+		&u.RatingAverage,
+		&u.RatingCount,
 		&u.Role,
-		&u.IsVerified,
+		&u.IsEmailVerified,
+		&u.IsPhoneVerified,
+		&u.IsIDVerified,
 		&u.IsDisabled,
+		&u.Version,
+		&u.UpdatedAt,
 		&u.CreatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {

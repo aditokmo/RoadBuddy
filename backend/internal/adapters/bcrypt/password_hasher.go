@@ -8,7 +8,7 @@ func NewPasswordHasher() *PasswordHasher {
 	return &PasswordHasher{}
 }
 
-func (h *PasswordHasher) Hash(password string) (string, error) {
+func (h *PasswordHasher) HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

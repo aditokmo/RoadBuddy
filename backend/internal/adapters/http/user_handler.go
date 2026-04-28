@@ -1,6 +1,7 @@
 package http
 
 import (
+	"backend/internal/adapters/render"
 	"backend/internal/domain/user"
 	"log/slog"
 	"net/http"
@@ -33,7 +34,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		response = append(response, toUserResponse(u))
 	}
 
-	writeJSON(w, http.StatusOK, response)
+	render.JSON(w, http.StatusOK, response)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	id = strings.TrimSpace(id)
 	if id == "" {
-		writeError(w, http.StatusBadRequest, "User ID is required", "missing_id")
+		render.Error(w, http.StatusBadRequest, "User ID is required", "missing_id")
 		return
 	}
 
@@ -52,5 +53,5 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toUserResponse(user))
+	render.JSON(w, http.StatusOK, toUserResponse(user))
 }
