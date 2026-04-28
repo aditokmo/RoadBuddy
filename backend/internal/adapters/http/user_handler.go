@@ -29,9 +29,9 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make([]userResponse, 0, len(users))
+	response := make([]user.UserResponse, 0, len(users))
 	for _, u := range users {
-		response = append(response, toUserResponse(u))
+		response = append(response, user.MapToUserResponse(u))
 	}
 
 	render.JSON(w, http.StatusOK, response)
@@ -47,11 +47,13 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetUserById(r.Context(), id)
+	u, err := h.service.GetUserById(r.Context(), id)
 	if err != nil {
 		h.handleUserError(w, err)
 		return
 	}
 
-	render.JSON(w, http.StatusOK, toUserResponse(user))
+	response := user.MapToUserResponse(u)
+
+	render.JSON(w, http.StatusOK, response)
 }
