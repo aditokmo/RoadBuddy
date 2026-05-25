@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Config struct {
 	DBName          string
 	JWTSecret       string
 	MigrationsPath  string
+	AllowedOrigins  []string
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 	ReadTimeout     time.Duration
@@ -30,6 +32,7 @@ func LoadConfig() *Config {
 	port := getEnvWithFallback("PORT", "8080")
 	dbHost := getEnvWithFallback("DB_HOST", "localhost")
 	dbPort := getEnvWithFallback("DB_PORT", "5433")
+	allowedOrigins := getAllowedOrigins()
 	accessTokenDuration := GetDurationEnv("ACCESS_TOKEN_TTL_MINUTES", 15, time.Minute)
 	refreshTokenDuration := GetDurationEnv("REFRESH_TOKEN_TTL_HOURS", 24*7, time.Hour)
 
@@ -53,12 +56,32 @@ func LoadConfig() *Config {
 		DBName:          dbName,
 		JWTSecret:       jwtSecret,
 		MigrationsPath:  migrationsPath,
+		AllowedOrigins:  allowedOrigins,
 		AccessTokenTTL:  accessTokenDuration,
 		RefreshTokenTTL: refreshTokenDuration,
 		ReadTimeout:     10 * time.Second,
 		WriteTimeout:    30 * time.Second,
 		IdleTimeout:     60 * time.Second,
 	}
+}
+
+func getAllowedOrigins() []string {
+	raw := getEnvWithFallback("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+	parts := strings.Split(raw, ",")
+	allowedOrigins := make([]string, 0, len(parts))
+
+	for _, origin := range parts {
+		origin = strings.TrimSpace(origin)
+		if origin != "" {
+			allowedOrigins = append(allowedOrigins, origin)
+		}
+	}
+
+	if len(allowedOrigins) == 0 {
+		return []string{"http://localhost:3000", "http://127.0.0.1:3000"}
+	}
+
+	return allowedOrigins
 }
 
 func getEnv(key string) string {

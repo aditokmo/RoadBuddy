@@ -20,10 +20,11 @@ import (
 )
 
 type Server struct {
-	port     string
-	db       postgres.DBService
-	services *api.Services
-	handlers *api.Handlers
+	port           string
+	allowedOrigins []string
+	db             postgres.DBService
+	services       *api.Services
+	handlers       *api.Handlers
 }
 
 func NewServer() *http.Server {
@@ -64,10 +65,11 @@ func NewServer() *http.Server {
 	}
 
 	app := &Server{
-		port:     cfg.Port,
-		db:       db,
-		services: services,
-		handlers: handlers,
+		port:           cfg.Port,
+		allowedOrigins: cfg.AllowedOrigins,
+		db:             db,
+		services:       services,
+		handlers:       handlers,
 	}
 
 	return &http.Server{

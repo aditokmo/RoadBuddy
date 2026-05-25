@@ -10,7 +10,7 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	r := httprouter.New()
 
-	corsWrapper := middleware.CORS(r)
+	corsWrapper := middleware.CORS(s.allowedOrigins, r)
 	authenticate := middleware.JWT(s.services.Auth)
 
 	// Auth routes

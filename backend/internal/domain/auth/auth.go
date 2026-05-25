@@ -51,8 +51,10 @@ type LoginHeaders struct {
 }
 
 type Token struct {
-	Access  string `json:"access_token"`
-	Refresh string `json:"refresh_token"`
+	Access             string `json:"access_token"`
+	Refresh            string `json:"refresh_token"`
+	AccessTokenExpiry  time.Time
+	RefreshTokenExpiry time.Time
 }
 
 type TokenPair struct {

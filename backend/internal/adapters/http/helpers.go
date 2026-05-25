@@ -7,25 +7,29 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
-func SetAuthCookies(w http.ResponseWriter, access, refresh string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "access_token",
-		Value:    access,
-		HttpOnly: true,
-		Secure:   true,
-		Path:     "/",
-		SameSite: http.SameSiteLaxMode,
-	})
+func SetAuthCookies(w http.ResponseWriter, access, refresh string, accessExpiry, refreshExpiry time.Time) {
+	setCookie(w, "access_token", access, accessExpiry, true)
+	setCookie(w, "refresh_token", refresh, refreshExpiry, true)
+}
+
+func setCookie(w http.ResponseWriter, name, value string, expiry time.Time, httpOnly bool) {
+	maxAge := int(time.Until(expiry).Seconds())
+	if maxAge < 0 {
+		maxAge = 0
+	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh,
-		HttpOnly: true,
+		Name:     name,
+		Value:    value,
+		HttpOnly: httpOnly,
 		Secure:   true,
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
+		MaxAge:   maxAge,
+		Expires:  expiry,
 	})
 }
 
@@ -38,6 +42,7 @@ func ClearAuthCookies(w http.ResponseWriter) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Unix(0, 0),
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -48,6 +53,7 @@ func ClearAuthCookies(w http.ResponseWriter) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Unix(0, 0),
 	})
 }
 
@@ -75,6 +81,15 @@ func (h *AuthHandler) handleAuthError(w http.ResponseWriter, err error) {
 
 	case errors.Is(err, auth.ErrExpiredToken):
 		render.Error(w, http.StatusUnauthorized, "Token has expired", "expired_token")
+
+	case errors.Is(err, auth.ErrInvalidRefreshToken):
+		render.Error(w, http.StatusUnauthorized, "Refresh token is not valid", "invalid_refresh_token")
+
+	case errors.Is(err, auth.ErrExpiredSession):
+		render.Error(w, http.StatusUnauthorized, "Refresh token has expired", "refresh_token_expired")
+
+	case errors.Is(err, auth.ErrInvalidSession):
+		render.Error(w, http.StatusUnauthorized, "Refresh token is not valid", "invalid_refresh_token")
 
 	case errors.Is(err, user.ErrUserNotFound):
 		render.Error(w, http.StatusNotFound, "User not found", "user_not_found")

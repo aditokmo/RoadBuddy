@@ -50,7 +50,7 @@ func (h *AuthHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SetAuthCookies(w, token.Access, token.Refresh)
+	SetAuthCookies(w, token.Access, token.Refresh, token.AccessTokenExpiry, token.RefreshTokenExpiry)
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -84,7 +84,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SetAuthCookies(w, token.Access, token.Refresh)
+	SetAuthCookies(w, token.Access, token.Refresh, token.AccessTokenExpiry, token.RefreshTokenExpiry)
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -103,7 +103,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SetAuthCookies(w, token.Access, token.Refresh)
+	SetAuthCookies(w, token.Access, token.Refresh, token.AccessTokenExpiry, token.RefreshTokenExpiry)
 
 	w.WriteHeader(http.StatusNoContent)
 }

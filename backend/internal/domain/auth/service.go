@@ -3,6 +3,7 @@ package auth
 import (
 	"backend/internal/domain/user"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -61,8 +62,10 @@ func (s *Service) Register(ctx context.Context, u RegisterInput) (*Token, error)
 	}
 
 	return &Token{
-		Access:  tokens.AccessToken,
-		Refresh: tokens.RefreshToken,
+		Access:             tokens.AccessToken,
+		Refresh:            tokens.RefreshToken,
+		AccessTokenExpiry:  tokens.AccessTokenExpiry,
+		RefreshTokenExpiry: tokens.RefreshTokenExpiry,
 	}, nil
 }
 
@@ -101,17 +104,26 @@ func (s *Service) Login(ctx context.Context, u LoginInput, headers LoginHeaders)
 	}
 
 	return &Token{
-		Access:  tokens.AccessToken,
-		Refresh: tokens.RefreshToken,
+		Access:             tokens.AccessToken,
+		Refresh:            tokens.RefreshToken,
+		AccessTokenExpiry:  tokens.AccessTokenExpiry,
+		RefreshTokenExpiry: tokens.RefreshTokenExpiry,
 	}, nil
 }
 
 func (s *Service) RefreshAccessToken(ctx context.Context, rawRefreshToken string) (*Token, error) {
+	if rawRefreshToken == "" {
+		return nil, ErrInvalidRefreshToken
+	}
+
 	hashedToken := s.tokenHasher.HashToken(rawRefreshToken)
 
 	session, err := s.authRepo.GetSessionByRefreshToken(ctx, hashedToken)
 	if err != nil {
-		return nil, ErrInvalidSession
+		if errors.Is(err, ErrSessionNotFound) {
+			return nil, ErrInvalidRefreshToken
+		}
+		return nil, fmt.Errorf("Fetching session: %w", err)
 	}
 
 	if session.IsExpired() {
@@ -119,32 +131,32 @@ func (s *Service) RefreshAccessToken(ctx context.Context, rawRefreshToken string
 		return nil, ErrExpiredSession
 	}
 
-	user, err := s.userRepo.GetById(ctx, session.UserID)
+	currentUser, err := s.userRepo.GetById(ctx, session.UserID)
 	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			_ = s.authRepo.DeleteSession(ctx, hashedToken)
+			return nil, ErrInvalidRefreshToken
+		}
 		return nil, fmt.Errorf("Fetching user for session: %w", err)
 	}
 
-	if user.IsDisabled {
-		err := s.authRepo.DeleteAllUserSessions(ctx, user.ID)
+	if currentUser.IsDisabled {
+		err := s.authRepo.DeleteAllUserSessions(ctx, currentUser.ID)
 		if err != nil {
 			return nil, fmt.Errorf("Deleting user sessions: %w", err)
 		}
 		return nil, ErrAccountDisabled
 	}
 
-	tokens, err := s.tokens.GenerateTokens(&user)
+	tokens, err := s.tokens.GenerateTokens(&currentUser)
 	if err != nil {
 		return nil, fmt.Errorf("Generating tokens: %w", err)
-	}
-
-	if err := s.authRepo.DeleteSession(ctx, hashedToken); err != nil {
-		return nil, fmt.Errorf("Deleting old session: %w", err)
 	}
 
 	newTokenHash := s.tokenHasher.HashToken(tokens.RefreshToken)
 	newSession := &Session{
 		ID:               uuid.NewString(),
-		UserID:           user.ID,
+		UserID:           currentUser.ID,
 		RefreshTokenHash: newTokenHash,
 		UserAgent:        session.UserAgent,
 		IPAddress:        session.IPAddress,
@@ -156,9 +168,16 @@ func (s *Service) RefreshAccessToken(ctx context.Context, rawRefreshToken string
 		return nil, fmt.Errorf("Creating new session: %w", err)
 	}
 
+	if err := s.authRepo.DeleteSession(ctx, hashedToken); err != nil {
+		_ = s.authRepo.DeleteSession(ctx, newTokenHash)
+		return nil, fmt.Errorf("Deleting old session: %w", err)
+	}
+
 	return &Token{
-		Access:  tokens.AccessToken,
-		Refresh: tokens.RefreshToken,
+		Access:             tokens.AccessToken,
+		Refresh:            tokens.RefreshToken,
+		AccessTokenExpiry:  tokens.AccessTokenExpiry,
+		RefreshTokenExpiry: tokens.RefreshTokenExpiry,
 	}, nil
 }
 
