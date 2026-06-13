@@ -4,6 +4,7 @@ import (
 	"backend/internal/adapters/render"
 	"backend/internal/domain/auth"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -106,6 +107,29 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	SetAuthCookies(w, token.Access, token.Refresh, token.AccessTokenExpiry, token.RefreshTokenExpiry)
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	fmt.Printf("Received verification token: %s\n", token)
+	if token == "" {
+		render.Error(w, http.StatusBadRequest, "Verification token is required", "missing_verification_token")
+		return
+	}
+
+	ctx := r.Context()
+	err := h.service.VerifyEmail(ctx, token)
+	if err != nil {
+		if err == auth.ErrInvalidVerificationToken {
+			render.Error(w, http.StatusBadRequest, err.Error(), "invalid_verification_token")
+			return
+		}
+
+		render.Error(w, http.StatusInternalServerError, "Internal server error", "invalid_verification_token_server_error")
+		return
+	}
+
+	render.JSON(w, http.StatusOK, map[string]string{"message": "Email successfully verified! You can now log in."})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {

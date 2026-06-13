@@ -3,6 +3,7 @@ package auth
 import (
 	"backend/internal/domain/user"
 	"context"
+	"time"
 )
 
 type Repository interface {
@@ -12,11 +13,14 @@ type Repository interface {
 	GetSessionByRefreshToken(ctx context.Context, refreshToken string) (*Session, error)
 	DeleteSession(ctx context.Context, refreshToken string) error
 	DeleteAllUserSessions(ctx context.Context, userID string) error
+	SaveVerificationToken(ctx context.Context, userID, token string, expiresAt time.Time) error
+	GetUserIDByVerificationToken(ctx context.Context, token string) (string, error)
+	DeleteVerificationToken(ctx context.Context, token string) error
 }
 
 type TokenProvider interface {
 	GenerateTokens(user *user.User) (*TokenPair, error)
-	ValidateAccessToken(token string) (*Claims, error)
+	ValidateAccessToken(token string) (*JWTPayload, error)
 }
 
 type PasswordHasher interface {
@@ -26,4 +30,8 @@ type PasswordHasher interface {
 
 type TokenHasher interface {
 	HashToken(token string) string
+}
+
+type EmailPort interface {
+	SendEmailVerification(ctx context.Context, toEmail, token string) error
 }

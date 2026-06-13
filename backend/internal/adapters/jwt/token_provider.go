@@ -50,7 +50,7 @@ func (p *TokenProvider) GenerateTokens(user *user.User) (*auth.TokenPair, error)
 	}, nil
 }
 
-func (p *TokenProvider) ValidateAccessToken(token string) (*auth.Claims, error) {
+func (p *TokenProvider) ValidateAccessToken(token string) (*auth.JWTPayload, error) {
 	parsedToken, err := jwt.Parse(token, func(parsedToken *jwt.Token) (interface{}, error) {
 		if _, ok := parsedToken.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, auth.ErrInvalidToken
@@ -78,7 +78,7 @@ func (p *TokenProvider) ValidateAccessToken(token string) (*auth.Claims, error) 
 	email, _ := claims["email"].(string)
 	roleValue, _ := claims["role"].(string)
 
-	return &auth.Claims{
+	return &auth.JWTPayload{
 		UserID: userID,
 		Email:  email,
 		Role:   user.Role(roleValue),

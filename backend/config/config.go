@@ -21,6 +21,10 @@ type Config struct {
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
 	IdleTimeout     time.Duration
+	SendGridAPIKey  string
+	FromEmail       string
+	FromName        string
+	BaseURL         string
 }
 
 func LoadConfig() *Config {
@@ -35,6 +39,10 @@ func LoadConfig() *Config {
 	allowedOrigins := getAllowedOrigins()
 	accessTokenDuration := GetDurationEnv("ACCESS_TOKEN_TTL_MINUTES", 15, time.Minute)
 	refreshTokenDuration := GetDurationEnv("REFRESH_TOKEN_TTL_HOURS", 24*7, time.Hour)
+	sendGridAPIKey := getEnv("SENDGRID_API_KEY")
+	fromEmail := getEnvWithFallback("EMAIL_FROM_EMAIL", "support@roadbuddy.com")
+	fromName := getEnvWithFallback("EMAIL_FROM_NAME", "RoadBuddy Support")
+	baseURL := getEnvWithFallback("EMAIL_BASE_URL", "http://localhost:8080")
 
 	if dbHost == "db" {
 		if _, err := os.Stat("/.dockerenv"); err != nil {
@@ -62,6 +70,10 @@ func LoadConfig() *Config {
 		ReadTimeout:     10 * time.Second,
 		WriteTimeout:    30 * time.Second,
 		IdleTimeout:     60 * time.Second,
+		SendGridAPIKey:  sendGridAPIKey,
+		FromEmail:       fromEmail,
+		FromName:        fromName,
+		BaseURL:         baseURL,
 	}
 }
 

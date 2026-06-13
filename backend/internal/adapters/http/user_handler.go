@@ -1,6 +1,7 @@
 package http
 
 import (
+	"backend/internal/adapters/middleware"
 	"backend/internal/adapters/render"
 	"backend/internal/domain/user"
 	"log/slog"
@@ -56,4 +57,20 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	response := user.MapToUserResponse(u)
 
 	render.JSON(w, http.StatusOK, response)
+}
+
+func (h *UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		render.Error(w, http.StatusInternalServerError, "Failed to get user context", "context_error")
+		return
+	}
+
+	user, err := h.service.GetUserById(r.Context(), userID)
+	if err != nil {
+		h.handleUserError(w, err)
+		return
+	}
+
+	render.JSON(w, http.StatusOK, user)
 }

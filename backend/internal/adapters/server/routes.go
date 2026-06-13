@@ -18,9 +18,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.HandlerFunc(http.MethodPost, "/api/v1/auth/login", s.handlers.Auth.Login)
 	r.HandlerFunc(http.MethodPost, "/api/v1/auth/refresh", s.handlers.Auth.RefreshToken)
 	r.HandlerFunc(http.MethodPost, "/api/v1/auth/logout", authenticate(s.handlers.Auth.Logout))
-	// r.HandlerFunc(http.MethodGet, "/api/v1/auth/me", s.handlers.Auth.GetCurrentUser)
+	r.HandlerFunc(http.MethodGet, "/api/v1/auth/verify", s.handlers.Auth.VerifyEmail)
 
 	// User routes
+	r.HandlerFunc(http.MethodGet, "/api/v1/user/me", authenticate(s.handlers.User.GetCurrentUser))
 	r.HandlerFunc(http.MethodGet, "/api/v1/users", s.handlers.User.GetUsers)
 	r.HandlerFunc(http.MethodGet, "/api/v1/users/:id", s.handlers.User.GetUser)
 

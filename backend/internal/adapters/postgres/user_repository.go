@@ -106,3 +106,18 @@ func (ur *UserRepository) GetById(ctx context.Context, id string) (user.User, er
 
 	return u, nil
 }
+
+func (ur *UserRepository) UpdateEmailVerificationStatus(ctx context.Context, userID string, isVerified bool) error {
+	query := `
+		UPDATE users
+		SET is_email_verified = $1, updated_at = NOW()
+		WHERE id = $2;
+	`
+
+	_, err := ur.db.Exec(ctx, query, isVerified, userID)
+	if err != nil {
+		return fmt.Errorf("Postgres updating email verification status: %w", err)
+	}
+
+	return nil
+}

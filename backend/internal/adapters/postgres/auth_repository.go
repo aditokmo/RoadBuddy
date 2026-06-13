@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -165,4 +166,53 @@ func (ar *AuthRepository) GetSessionByRefreshToken(ctx context.Context, refreshT
 	}
 
 	return s, nil
+}
+
+func (ar *AuthRepository) SaveVerificationToken(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error {
+	query := `
+		INSERT INTO verification_tokens (user_id, token_hash, expires_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (token_hash) DO UPDATE
+		SET expires_at = $3;
+	`
+
+	_, err := ar.db.Exec(ctx, query, userID, tokenHash, expiresAt)
+	if err != nil {
+		return fmt.Errorf("Postgres saving verification token: %w", err)
+	}
+
+	return nil
+}
+
+func (ar *AuthRepository) GetUserIDByVerificationToken(ctx context.Context, tokenHash string) (string, error) {
+	query := `
+		SELECT user_id
+		FROM verification_tokens
+		WHERE token_hash = $1 AND expires_at > NOW();
+	`
+
+	var userID string
+	err := ar.db.QueryRow(ctx, query, tokenHash).Scan(&userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", auth.ErrInvalidVerificationToken
+		}
+		return "", fmt.Errorf("Postgres getting user ID by token: %w", err)
+	}
+
+	return userID, nil
+}
+
+func (ar *AuthRepository) DeleteVerificationToken(ctx context.Context, tokenHash string) error {
+	query := `
+		DELETE FROM verification_tokens
+		WHERE token_hash = $1;
+	`
+
+	_, err := ar.db.Exec(ctx, query, tokenHash)
+	if err != nil {
+		return fmt.Errorf("Postgres deleting verification token: %w", err)
+	}
+
+	return nil
 }

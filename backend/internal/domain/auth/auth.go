@@ -10,17 +10,18 @@ import (
 )
 
 var (
-	ErrInvalidCredentials  = errors.New("Invalid credentials")
-	ErrSessionNotFound     = errors.New("Session not found")
-	ErrInvalidToken        = errors.New("Invalid token")
-	ErrInvalidEmail        = errors.New("Invalid email")
-	ErrExpiredToken        = errors.New("Expired token")
-	ErrExpiredSession      = errors.New("Session has expired")
-	ErrInvalidSession      = errors.New("Invalid session")
-	ErrEmailTaken          = errors.New("Email is taken")
-	ErrAccountDisabled     = errors.New("Account has been disabled")
-	ErrWeakPassword        = errors.New("Weak password")
-	ErrInvalidRefreshToken = errors.New("Invalid refresh token")
+	ErrInvalidCredentials       = errors.New("Invalid credentials")
+	ErrSessionNotFound          = errors.New("Session not found")
+	ErrInvalidToken             = errors.New("Invalid token")
+	ErrInvalidEmail             = errors.New("Invalid email")
+	ErrExpiredToken             = errors.New("Expired token")
+	ErrExpiredSession           = errors.New("Session has expired")
+	ErrInvalidSession           = errors.New("Invalid session")
+	ErrEmailTaken               = errors.New("Email is taken")
+	ErrAccountDisabled          = errors.New("Account has been disabled")
+	ErrWeakPassword             = errors.New("Weak password")
+	ErrInvalidRefreshToken      = errors.New("Invalid refresh token")
+	ErrInvalidVerificationToken = errors.New("Invalid or expired verification token")
 )
 
 type Session struct {
@@ -64,7 +65,7 @@ type TokenPair struct {
 	RefreshTokenExpiry time.Time
 }
 
-type Claims struct {
+type JWTPayload struct {
 	UserID string
 	Email  string
 	Role   user.Role

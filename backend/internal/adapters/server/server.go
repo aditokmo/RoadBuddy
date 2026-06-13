@@ -6,6 +6,7 @@ import (
 	api "backend/internal/adapters/http"
 	"backend/internal/adapters/jwt"
 	"backend/internal/adapters/postgres"
+	"backend/internal/adapters/sendgrid"
 	"backend/internal/adapters/sha256"
 	"backend/internal/domain/auth"
 	"backend/internal/domain/user"
@@ -50,7 +51,8 @@ func NewServer() *http.Server {
 	tokenHasher := sha256.NewTokenHasher()
 
 	// Services
-	authService := auth.NewService(authRepository, userRepository, tokenProvider, passwordHasher, tokenHasher)
+	emailProvider := sendgrid.NewService(cfg.SendGridAPIKey, cfg.FromEmail, cfg.FromName, cfg.BaseURL)
+	authService := auth.NewService(authRepository, userRepository, tokenProvider, passwordHasher, tokenHasher, emailProvider)
 	userService := user.NewService(userRepository)
 
 	services := &api.Services{

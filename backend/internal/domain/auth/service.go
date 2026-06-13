@@ -2,6 +2,7 @@ package auth
 
 import (
 	"backend/internal/domain/user"
+	"backend/pkg/crypto"
 	"context"
 	"errors"
 	"fmt"
@@ -16,15 +17,17 @@ type Service struct {
 	tokens         TokenProvider
 	passwordHasher PasswordHasher
 	tokenHasher    TokenHasher
+	emailPort      EmailPort
 }
 
-func NewService(authRepo Repository, userRepo user.Repository, tokens TokenProvider, passwordHasher PasswordHasher, tokenHasher TokenHasher) *Service {
+func NewService(authRepo Repository, userRepo user.Repository, tokens TokenProvider, passwordHasher PasswordHasher, tokenHasher TokenHasher, emailPort EmailPort) *Service {
 	return &Service{
 		authRepo:       authRepo,
 		userRepo:       userRepo,
 		tokens:         tokens,
 		passwordHasher: passwordHasher,
 		tokenHasher:    tokenHasher,
+		emailPort:      emailPort,
 	}
 }
 
@@ -52,10 +55,30 @@ func (s *Service) Register(ctx context.Context, u RegisterInput) (*Token, error)
 		CreatedAt:       time.Now().UTC(),
 	}
 
+	// Create User
 	if err := s.authRepo.Create(ctx, newUser); err != nil {
 		return nil, err
 	}
 
+	// Email Verification
+	verificationToken, err := crypto.GenerateSecureToken()
+	fmt.Printf("Generated verification token: %s\n", verificationToken)
+	if err != nil {
+		return nil, fmt.Errorf("Generate Secure Verification Token: %w", err)
+	}
+
+	tokenExpiry := time.Now().UTC().Add(24 * time.Hour)
+	err = s.authRepo.SaveVerificationToken(ctx, newUser.ID, verificationToken, tokenExpiry)
+	if err != nil {
+		return nil, fmt.Errorf("Saving Verification Token: %w", err)
+	}
+
+	err = s.emailPort.SendEmailVerification(ctx, newUser.Email, verificationToken)
+	if err != nil {
+		fmt.Printf("Failed to send verification email, please try again: %v\n", err)
+	}
+
+	// Generate Access and Refresh tokens
 	tokens, err := s.tokens.GenerateTokens(newUser)
 	if err != nil {
 		return nil, fmt.Errorf("Generating tokens: %w", err)
@@ -67,6 +90,36 @@ func (s *Service) Register(ctx context.Context, u RegisterInput) (*Token, error)
 		AccessTokenExpiry:  tokens.AccessTokenExpiry,
 		RefreshTokenExpiry: tokens.RefreshTokenExpiry,
 	}, nil
+}
+
+func (s *Service) VerifyEmail(ctx context.Context, token string) error {
+	if token == "" {
+		return ErrInvalidVerificationToken
+	}
+
+	userID, err := s.authRepo.GetUserIDByVerificationToken(ctx, token)
+	if err != nil {
+		return ErrInvalidVerificationToken
+	}
+
+	currentUser, err := s.userRepo.GetById(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("Fetching user for email verification: %w", err)
+	}
+
+	if currentUser.IsEmailVerified {
+		_ = s.authRepo.DeleteVerificationToken(ctx, token)
+		return nil
+	}
+
+	err = s.userRepo.UpdateEmailVerificationStatus(ctx, currentUser.ID, true)
+	if err != nil {
+		return fmt.Errorf("Updating user verification status: %w", err)
+	}
+
+	_ = s.authRepo.DeleteVerificationToken(ctx, token)
+
+	return nil
 }
 
 func (s *Service) Login(ctx context.Context, u LoginInput, headers LoginHeaders) (*Token, error) {
@@ -195,6 +248,6 @@ func (s *Service) Logout(ctx context.Context, refreshToken string) error {
 	return nil
 }
 
-func (s *Service) ValidateToken(token string) (*Claims, error) {
+func (s *Service) ValidateToken(token string) (*JWTPayload, error) {
 	return s.tokens.ValidateAccessToken(token)
 }

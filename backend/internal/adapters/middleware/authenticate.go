@@ -8,7 +8,9 @@ import (
 	"net/http"
 )
 
-type claimsKey struct{}
+type ContextKey string
+
+const UserIDKey ContextKey = "userID"
 
 func JWT(service *auth.Service) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
@@ -20,7 +22,7 @@ func JWT(service *auth.Service) func(http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			claims, err := service.ValidateToken(tokenString)
+			userID, err := service.ValidateToken(tokenString)
 			if err != nil {
 				switch {
 				case errors.Is(err, auth.ErrExpiredToken):
@@ -33,7 +35,7 @@ func JWT(service *auth.Service) func(http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), claimsKey{}, claims)
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
