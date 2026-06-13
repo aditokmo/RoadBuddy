@@ -62,7 +62,6 @@ func (s *Service) Register(ctx context.Context, u RegisterInput) (*Token, error)
 
 	// Email Verification
 	verificationToken, err := crypto.GenerateSecureToken()
-	fmt.Printf("Generated verification token: %s\n", verificationToken)
 	if err != nil {
 		return nil, fmt.Errorf("Generate Secure Verification Token: %w", err)
 	}
@@ -134,6 +133,10 @@ func (s *Service) Login(ctx context.Context, u LoginInput, headers LoginHeaders)
 
 	if existingUser.IsDisabled {
 		return nil, ErrAccountDisabled
+	}
+
+	if !existingUser.IsEmailVerified {
+		return nil, ErrEmailNotVerified
 	}
 
 	tokens, err := s.tokens.GenerateTokens(existingUser)

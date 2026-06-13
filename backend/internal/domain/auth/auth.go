@@ -19,6 +19,7 @@ var (
 	ErrInvalidSession           = errors.New("Invalid session")
 	ErrEmailTaken               = errors.New("Email is taken")
 	ErrAccountDisabled          = errors.New("Account has been disabled")
+	ErrEmailNotVerified         = errors.New("Email is not verified, please check your inbox")
 	ErrWeakPassword             = errors.New("Weak password")
 	ErrInvalidRefreshToken      = errors.New("Invalid refresh token")
 	ErrInvalidVerificationToken = errors.New("Invalid or expired verification token")

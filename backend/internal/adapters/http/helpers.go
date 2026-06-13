@@ -68,6 +68,9 @@ func (h *AuthHandler) handleAuthError(w http.ResponseWriter, err error) {
 	case errors.Is(err, auth.ErrAccountDisabled):
 		render.Error(w, http.StatusForbidden, "This account has been disabled", "account_disabled")
 
+	case errors.Is(err, auth.ErrEmailNotVerified):
+		render.Error(w, http.StatusForbidden, "Email is not verified, please check your mail inbox or spam", "email_not_verified")
+
 	case errors.Is(err, auth.ErrWeakPassword):
 		render.Error(w, http.StatusBadRequest,
 			"password must be at least 8 characters, include an uppercase letter, a number, and a special character",

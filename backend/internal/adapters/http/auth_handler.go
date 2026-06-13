@@ -4,7 +4,6 @@ import (
 	"backend/internal/adapters/render"
 	"backend/internal/domain/auth"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -111,7 +110,6 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
-	fmt.Printf("Received verification token: %s\n", token)
 	if token == "" {
 		render.Error(w, http.StatusBadRequest, "Verification token is required", "missing_verification_token")
 		return
